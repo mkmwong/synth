@@ -1,0 +1,25 @@
+[project]
+name = "synth"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "Mandy Wong",email = "mandywong921123@gmail.com"}
+]
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "numpy (==1.23.0)",
+    "sounddevice (>=0.5.1,<0.6.0)"
+]
+
+[tool.poetry]
+packages = [{include = "synth", from = "src"}]
+
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.5"
+black = "^25.1.0"
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
