@@ -28,6 +28,7 @@ def generate_waveform(
     play_wave(wave, sampling_rate)
     return wave, sampling_rate
 
+
 def play_wave(wave: np.ndarray, sr: int) -> bool:
     try:
         sd.play(wave, samplerate=sr, blocking=True)
@@ -35,6 +36,7 @@ def play_wave(wave: np.ndarray, sr: int) -> bool:
     except Exception as e:
         print(f"Error during playback: {e}")
         return False
-    
-if __name__=="__main__":
+
+
+if __name__ == "__main__":
     generate_waveform(type="triangle")
