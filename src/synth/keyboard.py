@@ -41,16 +41,12 @@ class Keys:
             if key.char in self.key_map and key.char not in self.pressed:
                 print(f"Pressed {self.key_map[key.char]} ")
                 self.pressed.add(key.char)
-                return True
             elif key.char in ["q", "w"]:
                 self.shift_octave(key.char)
-                return True
             else:
                 print(f"Pressed invalid key.")
-                return False
         except AttributeError as e:
             print(f"Error: {e}")
-            return False
 
     def on_release(self, key: keyboard.Key):
         try:
