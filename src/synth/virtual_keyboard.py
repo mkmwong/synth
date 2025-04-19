@@ -1,5 +1,5 @@
 from pynput import keyboard
-
+from mido import Message
 
 class Keys:
     def __init__(self):
@@ -19,6 +19,7 @@ class Keys:
         }
         self.octave = 0  # 0 start at C4, min -3, max 4
         self.pressed = set()
+        self.channel = 0
 
     def shift_octave(self, shift_dir: str):
         if shift_dir == "q" and self.octave < 4:
@@ -41,6 +42,7 @@ class Keys:
             if key.char in self.key_map and key.char not in self.pressed:
                 print(f"Pressed {self.key_map[key.char]} ")
                 self.pressed.add(key.char)
+                self.send_midi_message('note_on', self.key_map[key.char])
             elif key.char in ["q", "w"]:
                 self.shift_octave(key.char)
             else:
@@ -53,6 +55,7 @@ class Keys:
             if key.char in self.key_map:
                 print(f"Released {self.key_map[key.char]} ")
                 self.pressed.remove(key.char)
+                self.send_midi_message('note_off', self.key_map[key.char])
         except AttributeError as e:
             print(f"Error: {e}")
 
@@ -62,7 +65,10 @@ class Keys:
         ) as listener:
             listener.join()
 
+    def send_midi_message(self, operation, note_name):
+        return Message(operation, channel = self.channel,  note = note_name )
 
-if __name__ == "__main__":
-    keys = Keys()
-    keys.start_keyboard()
+
+#if __name__ == "__main__":
+#    keys = Keys()
+#    keys.start_keyboard()

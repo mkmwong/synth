@@ -2,3 +2,6 @@
 # Decay: Time taken for the level to reduce from attack to sustain
 # Sustain: Leel maintain until the key is released
 # Release: time level to decay to nil
+
+class ADSRenvelope:
+    pass
