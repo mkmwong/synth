@@ -5,7 +5,7 @@ from adsr import ADSREnvelope
 
 
 class Waveform:
-    def __init__(self, sr, type, adsr):
+    def __init__(self, sr, type, adsr, freq):
         if type not in ["sine", "sawtooth", "triangle", "square"]:
             raise ValueError(
                 f"Waveform type '{self.type} is not supported'. Expected one of ['sine', 'sawtooth', 'triangle', 'square']."
@@ -14,13 +14,13 @@ class Waveform:
         self.sampling_rate = sr
         self.type = type
         self.adsr = adsr
+        self.freq = freq
         
     # what is the minimum sampling rate allowed?
     # duration should never be allowed to be 0 ?
     def generate_waveform(
         self,
         k,
-        freq,
         buffer_size: int = 2048,
     ) -> Generator[Tuple[np.ndarray, int], None, None]:
 
@@ -30,13 +30,13 @@ class Waveform:
         while True:
             current_t = ph + t 
             if self.type == "sine":
-                wave = np.sin(2 * np.pi * freq * current_t)
+                wave = np.sin(2 * np.pi * self.freq * current_t)
             elif self.type == "sawtooth":
                 wave = 2 * (t - np.floor(current_t)) - 1
             elif self.type == "triangle":
-                wave = 2 * np.arcsin(np.sin(2 * np.pi * freq * current_t)) / np.pi
+                wave = 2 * np.arcsin(np.sin(2 * np.pi * self.freq * current_t)) / np.pi
             elif self.type == "square":
-                wave = np.sign(np.sin(2 * np.pi * freq * current_t))
+                wave = np.sign(np.sin(2 * np.pi * self.freq * current_t))
 
             amp_arr = self.adsr.get_amplitude_arr(k)
             if np.all(amp_arr == 0):
@@ -55,10 +55,3 @@ class Waveform:
             print(f"Error during playback: {e}")
             return False
         
-if __name__ == "__main__":
-    while True:
-        adsr = ADSREnvelope(0.1,0.1,0.7,1, "exponential",1024, 44100)
-        wavef = Waveform(440, 44100, "sine", adsr)
-        for wave, sr in wavef.generate_waveform(k=5, freq=440):
-            print("hi")
-            wavef.play_wave(wave, sr)

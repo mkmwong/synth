@@ -23,13 +23,13 @@ class Keys:
         self.midi_ctrl = midi_ctrl
 
     def shift_octave(self, shift_dir: str):
-        if shift_dir == "q" and self.octave < 4:
+        if shift_dir == "+" and self.octave < 4:
             print(f"Shifting up to { 4 + self.octave + 1 }")
             self.key_map = {
                 k: v + 12 for k, v in self.key_map.items() if isinstance(v, int)
             }
             self.octave = self.octave + 1
-        elif shift_dir == "w" and self.octave > -3:
+        elif shift_dir == "-" and self.octave > -3:
             print(f"Shifting down to { 4 + self.octave - 1}")
             self.key_map = {
                 k: v - 12 for k, v in self.key_map.items() if isinstance(v, int)
@@ -44,7 +44,7 @@ class Keys:
                 print(f"Pressed {self.key_map[key.char]} ")
                 self.pressed.add(key.char)
                 self.send_midi_message('note_on', self.key_map[key.char])
-            elif key.char in ["q", "w"]:
+            elif key.char in ["-", "+"]:
                 self.shift_octave(key.char)
             elif key.char in self.pressed:
                 pass

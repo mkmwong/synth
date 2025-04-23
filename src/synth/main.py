@@ -3,6 +3,8 @@ from midi_control import MidiControl
 from virtual_keyboard import Keys
 #from generate_waveform import generate_waveform
 from synth import Synth
+import sounddevice as sd
+from utils import  make_audio_callback
 
 if __name__ == "__main__":
     #start_midi_control()
@@ -16,4 +18,3 @@ if __name__ == "__main__":
     type = "sine"
     syn = Synth(t_att = t_att, t_dec = t_dec, sus_lvl = sus_lvl, t_rel = t_rel, curve = curve, bs = bs, sr = sr, type = type )
     syn.switch_on()
-

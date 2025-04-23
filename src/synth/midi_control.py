@@ -6,14 +6,16 @@ import time
 
 class MidiControl:
     def __init__(self, wave): #, input_name, output_name):
-        self.Waveform = wave
-        self.on_note = []
+        self.waveforms = wave
+        self.on_notes = {}
 
     def note_on(self,msg):
-        freq = self.note_to_frequency(msg.note)
-        print(f"Received a note on message for {msg.note} at {freq}")
-        self.on_note.append(msg.note)
-        gen = self.Waveform.generate_waveform(5,freq)
+        #freq = self.note_to_frequency(msg.note)
+        #print(f"Received a note on message for {msg.note} at {freq}")
+        #self.on_notes[msg.note] = self.waveforms[msg.note]
+        #gen = self.Waveform.generate_waveform(5,freq)
+        self.on_notes[msg.note] = self.waveforms[msg.note].generate_waveform(5)
+        print(self.on_notes)
         #waveform_data = []
         #for i in range(22):  # however many chunks you want
         #    wave_chunk, _ = next(gen)
@@ -22,17 +24,17 @@ class MidiControl:
         #np.savetxt("waveform_output.csv", waveform_data, delimiter=",")
         #print("waveformsaved ")
 
-        cb = self.make_callback(gen, 5, freq)
-        with sd.OutputStream(samplerate=self.Waveform.sampling_rate, blocksize = 2048, channels = 1, 
-                             dtype = 'float32', callback = cb):
-            print("Streaming...")
-            while True:
-                pass
+        #cb = self.make_callback(gen, 5, freq)
+        #with sd.OutputStream(samplerate=self.Waveform.sampling_rate, blocksize = 2048, channels = 1, 
+        #                     dtype = 'float32', callback = cb):
+        #    print("Streaming...")
+        #    while True:
+        #        pass
 
     def note_off(self, msg):
         print(f"Received a note off message for {msg.note}")
-        self.on_note.remove(msg.note)
-        self.Waveform.adsr.end_attack()
+        del self.on_notes[msg.note]
+        self.waveforms[msg.note].adsr.end_attack()
         pass
 
     def handling_message(self, msg: Message ):
@@ -42,9 +44,6 @@ class MidiControl:
             self.note_off(msg)
         pass
 
-    def note_to_frequency(self, midi_note: int) -> float:
-        return 440.0 * (2 ** ((midi_note - 69)/ 12))
-    
     def make_callback(self,gen, k , freq):
         def waveform_callback( dat, f, t, s):
             if s:
