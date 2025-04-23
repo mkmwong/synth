@@ -2,7 +2,7 @@ from pynput import keyboard
 from mido import Message
 
 class Keys:
-    def __init__(self):
+    def __init__(self, midi_ctrl):
         self.key_map = {
             "s": 60,
             "e": 61,
@@ -20,6 +20,7 @@ class Keys:
         self.octave = 0  # 0 start at C4, min -3, max 4
         self.pressed = set()
         self.channel = 0
+        self.midi_ctrl = midi_ctrl
 
     def shift_octave(self, shift_dir: str):
         if shift_dir == "q" and self.octave < 4:
@@ -45,6 +46,8 @@ class Keys:
                 self.send_midi_message('note_on', self.key_map[key.char])
             elif key.char in ["q", "w"]:
                 self.shift_octave(key.char)
+            elif key.char in self.pressed:
+                pass
             else:
                 print(f"Pressed invalid key.")
         except AttributeError as e:
@@ -66,7 +69,8 @@ class Keys:
             listener.join()
 
     def send_midi_message(self, operation, note_name):
-        return Message(operation, channel = self.channel,  note = note_name )
+        msg = Message(operation, channel = self.channel,  note = note_name )
+        self.midi_ctrl.handling_message(msg)
 
 
 #if __name__ == "__main__":
