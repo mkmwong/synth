@@ -1,4 +1,4 @@
-from synth.generate_waveform import *
+from synth.waveform import *
 from typing import Tuple
 import pytest
 

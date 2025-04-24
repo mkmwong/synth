@@ -1,6 +1,9 @@
 import numpy as np
+
+
 def note_to_frequency(midi_note: int) -> float:
-    return 440.0 * (2 ** ((midi_note - 69)/ 12))
+    return 440.0 * (2 ** ((midi_note - 69) / 12))
+
 
 def make_audio_callback(midi_ctrl):
     def audio_callback(outdata, frames, time, status):
@@ -13,7 +16,7 @@ def make_audio_callback(midi_ctrl):
                 wave_chunk, _ = next(gen)
                 mix += wave_chunk.reshape(-1, 1)
             except StopIteration:
-                print("hehe")
-            #    del active_notes[note]
+                print("Stopping playback.")
         outdata[:] = mix
+
     return audio_callback

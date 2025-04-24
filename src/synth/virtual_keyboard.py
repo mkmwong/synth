@@ -1,6 +1,7 @@
 from pynput import keyboard
 from mido import Message
 
+
 class Keys:
     def __init__(self, midi_ctrl):
         self.key_map = {
@@ -23,13 +24,13 @@ class Keys:
         self.midi_ctrl = midi_ctrl
 
     def shift_octave(self, shift_dir: str):
-        if shift_dir == "+" and self.octave < 4:
+        if shift_dir == "q" and self.octave < 4:
             print(f"Shifting up to { 4 + self.octave + 1 }")
             self.key_map = {
                 k: v + 12 for k, v in self.key_map.items() if isinstance(v, int)
             }
             self.octave = self.octave + 1
-        elif shift_dir == "-" and self.octave > -3:
+        elif shift_dir == "w" and self.octave > -3:
             print(f"Shifting down to { 4 + self.octave - 1}")
             self.key_map = {
                 k: v - 12 for k, v in self.key_map.items() if isinstance(v, int)
@@ -43,8 +44,8 @@ class Keys:
             if key.char in self.key_map and key.char not in self.pressed:
                 print(f"Pressed {self.key_map[key.char]} ")
                 self.pressed.add(key.char)
-                self.send_midi_message('note_on', self.key_map[key.char])
-            elif key.char in ["-", "+"]:
+                self.send_midi_message("note_on", self.key_map[key.char])
+            elif key.char in ["q", "w"]:
                 self.shift_octave(key.char)
             elif key.char in self.pressed:
                 pass
@@ -58,7 +59,7 @@ class Keys:
             if key.char in self.key_map:
                 print(f"Released {self.key_map[key.char]} ")
                 self.pressed.remove(key.char)
-                self.send_midi_message('note_off', self.key_map[key.char])
+                self.send_midi_message("note_off", self.key_map[key.char])
         except AttributeError as e:
             print(f"Error: {e}")
 
@@ -69,10 +70,5 @@ class Keys:
             listener.join()
 
     def send_midi_message(self, operation, note_name):
-        msg = Message(operation, channel = self.channel,  note = note_name )
+        msg = Message(operation, channel=self.channel, note=note_name)
         self.midi_ctrl.handling_message(msg)
-
-
-#if __name__ == "__main__":
-#    keys = Keys()
-#    keys.start_keyboard()
