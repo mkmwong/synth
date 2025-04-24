@@ -5,8 +5,9 @@ import numpy as np
 import time
 
 class MidiControl:
-    def __init__(self, wave): #, input_name, output_name):
+    def __init__(self, wave, bs): #, input_name, output_name):
         self.waveforms = wave
+        self.bs = bs
         self.on_notes = {}
 
     def note_on(self,msg):
@@ -14,7 +15,7 @@ class MidiControl:
         #print(f"Received a note on message for {msg.note} at {freq}")
         #self.on_notes[msg.note] = self.waveforms[msg.note]
         #gen = self.Waveform.generate_waveform(5,freq)
-        self.on_notes[msg.note] = self.waveforms[msg.note].generate_waveform(5)
+        self.on_notes[msg.note] = self.waveforms[msg.note].generate_waveform(5,self.bs)
         print(self.on_notes)
         #waveform_data = []
         #for i in range(22):  # however many chunks you want

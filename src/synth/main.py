@@ -13,7 +13,7 @@ if __name__ == "__main__":
     sus_lvl = 0.7
     t_rel = 0.2
     curve = "expo" 
-    bs = 2048
+    bs = 4096
     sr = 44100
     type = "sine"
     syn = Synth(t_att = t_att, t_dec = t_dec, sus_lvl = sus_lvl, t_rel = t_rel, curve = curve, bs = bs, sr = sr, type = type )
