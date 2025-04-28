@@ -19,7 +19,9 @@ class Synth:
         self.keyboard = Keys(self.midi_ctrl)
 
     def switch_on(self):
-        a, b = compute_buffer(0.0, 1.0, np.arange(self.bs), 10, np.zeros(self.bs, dtype=np.float32), 0)
+        a, b = compute_buffer(
+            0.0, 1.0, np.arange(self.bs), 10, np.zeros(self.bs, dtype=np.float32), 0
+        )
         print(f"ready! {a}, {b}")
         device_info = sd.query_devices(kind="output")
         print("Default sample rate:", device_info["default_samplerate"])

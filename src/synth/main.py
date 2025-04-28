@@ -8,10 +8,10 @@ import sounddevice as sd
 from utils import make_audio_callback
 
 if __name__ == "__main__":
-    t_att = 0.2
+    t_att = 2
     t_dec = 0.1
     sus_lvl = 0.7
-    t_rel = 0.2
+    t_rel = 0.5
     curve = "expo"
     bs = 4096
     sr = 48000

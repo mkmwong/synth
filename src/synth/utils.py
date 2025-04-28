@@ -2,14 +2,13 @@ import numpy as np
 import time
 from numba import njit
 
+
 @njit
-def compute_buffer( phase, inc, arange_buffer, table_size, wave_table, buffer_size):
-    idxs = (phase +  inc  * arange_buffer ) %table_size
+def compute_buffer(phase, inc, arange_buffer, table_size, wave_table, buffer_size):
+    idxs = (phase + inc * arange_buffer) % table_size
     idxs = idxs.astype(np.int32)
     buf = np.take(wave_table, idxs)
-    new_phase = (
-        phase + inc * buffer_size % table_size
-    )
+    new_phase = phase + inc * buffer_size % table_size
     return buf, new_phase
 
 

@@ -4,6 +4,7 @@ from adsr import ADSREnvelope
 from numba import njit
 from utils import compute_buffer
 
+
 class Oscillator:
     def __init__(self, type, tb_size, bs, sampling_rate, adsr):
         self.type = type
@@ -13,18 +14,27 @@ class Oscillator:
         self.buffer_size = bs
         self.current_notes = {}
         self.note_off_queue = []
+        self.last_amp = {}
         self.adsr = adsr
         self.arange_buffer = np.arange(self.buffer_size)
 
     def note_on(self, note, freq):
         inc = self.table_size * freq / self.sampling_rate
-        self.current_notes[note] = (
-            freq,
-            0.0,
-            inc,
-            0,
-        )  # phase and phase increase, and sample done
-        pass
+        if note not in self.current_notes:
+            self.current_notes[note] = (
+                freq,
+                0.0,
+                inc,
+                0,
+            )  # phase and phase increase,sample done, last intensity
+        else:
+            print(f"Note {note} is already on!!")
+            curr_amp = self.last_amp[note]
+            print(f"Restarting attack from {curr_amp}")
+            self.current_notes[note] = (freq, 0.0, inc, 0)
+            if note in self.note_off_queue:
+                print(f"Removing {note} from off_queue so it will keep playing")
+                self.note_off_queue.remove(note)
 
     def note_off(self, note):
         print(f"trying to off {note}, queue right now is {self.note_off_queue}")
@@ -43,32 +53,37 @@ class Oscillator:
 
     def get_buffer(self, note):
         freq, phase, inc, sample_done = self.current_notes[note]
-        buf, new_phase = compute_buffer(phase, inc, self.arange_buffer, self.table_size, self.wave_table, self.buffer_size)
-        self.current_notes[note] = (
-            freq,
-            new_phase,
+        buf, new_phase = compute_buffer(
+            phase,
             inc,
-            sample_done + self.buffer_size,
+            self.arange_buffer,
+            self.table_size,
+            self.wave_table,
+            self.buffer_size,
         )
-        return buf
+        return buf, new_phase
 
     def mix_waves(self):
         # print(f"self.current_notes are {self.current_notes}")
         out_arr = np.zeros(self.buffer_size)
         if len(self.current_notes) > 0:
-            keys = list(self.
-            current_notes.keys())
+            keys = list(self.current_notes.keys())
             for note in keys:
-                t1 = time.time()
-                buf = self.get_buffer(note)
-                t2 = time.time()
-                amp = self.adsr.get_amplitude(self.current_notes[note][3])
-                t3 = time.time()
+                freq, phase, inc, sample_done = self.current_notes[note]
+                buf, new_phase = self.get_buffer(note)
+                if note in self.last_amp:
+                    lst_amp = self.last_amp[note]
+                else:
+                    lst_amp = 0
+                amp = self.adsr.get_amplitude(sample_done, lst_amp)
+                self.current_notes[note] = (
+                    freq,
+                    new_phase,
+                    inc,
+                    sample_done + self.buffer_size,
+                )
+                self.last_amp[note] = amp[-1]
                 out_arr += buf * amp
-                t4 = time.time()
-                print(f"time to get wave buffer for {note} is {t2 - t1}")
-                #print(f"time to get adsr env for {note} is {t3 - t2}")
-                #print(f"time to multiple for {note} is {t4 - t3}")
             out_arr = out_arr / len(self.current_notes)
         if len(self.note_off_queue) > 0:
             print(f"In mix wave, queue right now is {self.note_off_queue}")
