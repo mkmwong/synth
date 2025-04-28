@@ -9,13 +9,14 @@ from utils import make_audio_callback
 
 if __name__ == "__main__":
     t_att = 0.2
-    t_dec = 0.2
+    t_dec = 0.1
     sus_lvl = 0.7
     t_rel = 0.2
-    curve = "expo" 
+    curve = "expo"
     bs = 4096
-    sr = 44100
-    k = 5
+    sr = 48000
+    k = 6
+    tb_size = 4096
     type = "sine"
     syn = Synth(
         t_att=t_att,
@@ -26,6 +27,7 @@ if __name__ == "__main__":
         bs=bs,
         sr=sr,
         type=type,
-        k = k
+        k=k,
+        tb_size=tb_size,
     )
     syn.switch_on()

@@ -1,5 +1,6 @@
 from mido import Message
-from waveform import Waveform
+from oscillator import Oscillator
+from utils import note_to_frequency
 import sounddevice as sd
 import numpy as np
 import time
@@ -7,36 +8,32 @@ import logging
 
 
 class MidiControl:
-    def __init__(self, wave, bs, k):
-        self.waveforms = wave
+    def __init__(self, oscillator, bs: int, k: int, on_notes: dict):
+        self.oscillator = oscillator
         self.bs = bs
-        self.on_notes = {}
+        # self.on_notes = on_notes
         self.k = k
 
-    def note_on(self, msg) -> bool:
+    # self.count = 0
+
+    def note_on(self, msg: Message) -> bool:
         try:
-            if msg.note in self.on_notes:
-                logging.warning(
-                    f" Note {msg.note} is already in on_note. This is a bug!"
-                )
-            else:
-                self.on_notes[msg.note] = self.waveforms[msg.note].generate_waveform(
-                    self.k
-                )
+            freq = note_to_frequency(msg.note)
+            self.oscillator.note_on(msg.note, freq)
             return True
         except Exception as e:
             logging.exception(f"Exception encountered in note_on : {e}")
             return False
 
-    def note_off(self, msg) -> bool:
+    def note_off(self, msg: Message) -> bool:
+        # print("midi off ")
         try:
-            if msg.note not in self.on_notes:
-                logging.warning(
-                    f"Note {msg.note} is already in on_note. This is a bug!"
-                )
-            else:
-                del self.on_notes[msg.note]
-                self.waveforms[msg.note].adsr.end_attack()
+            # if msg.note not in self.on_notes:
+            #    logging.warning(
+            #        f"Note {msg.note} is already not in on_note. This is a bug!"
+            #   )
+            # else:
+            self.oscillator.note_off(msg.note)
             return True
         except Exception as e:
             logging.exception(f"Exception encountered in note_off: {e}")

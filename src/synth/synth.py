@@ -1,39 +1,40 @@
 from virtual_keyboard import Keys
 from midi_control import MidiControl
 from adsr import ADSREnvelope
-from waveform import Waveform
-from utils import note_to_frequency, make_audio_callback
+from oscillator import Oscillator
+from utils import note_to_frequency, make_audio_callback, compute_buffer
 import threading
 import numpy as np
 import sounddevice as sd
 
 
 class Synth:
-    def __init__(self, t_att, t_dec, sus_lvl, t_rel, curve, bs, sr, type, k):
-        self.adsr = ADSREnvelope(t_att, t_dec, sus_lvl, t_rel, curve, bs, sr)
+    def __init__(self, t_att, t_dec, sus_lvl, t_rel, curve, bs, sr, type, k, tb_size):
+        self.adsr = ADSREnvelope(t_att, t_dec, sus_lvl, t_rel, curve, bs, sr, k)
         self.sampling_rate = sr
         self.bs = bs
-        self.waveforms = {}
-        for midi_note in range(128):
-            freq = note_to_frequency(midi_note)
-            waveform = Waveform(sr, type, self.adsr, freq)
-            self.waveforms[midi_note] = waveform
-        self.midi_ctrl = MidiControl(self.waveforms, self.bs)
-        self.midi_ctrl = MidiControl(self.waveforms,k)
+        self.on_notes = {}
+        self.oscillator = Oscillator(type, tb_size, bs, sr, self.adsr)
+        self.midi_ctrl = MidiControl(self.oscillator, self.bs, k, self.on_notes)
         self.keyboard = Keys(self.midi_ctrl)
 
     def switch_on(self):
+        a, b = compute_buffer(0.0, 1.0, np.arange(self.bs), 10, np.zeros(self.bs, dtype=np.float32), 0)
+        print(f"ready! {a}, {b}")
+        device_info = sd.query_devices(kind="output")
+        print("Default sample rate:", device_info["default_samplerate"])
         keyboard_thread = threading.Thread(
             target=self.keyboard.start_keyboard, daemon=True
         )
         keyboard_thread.start()
-        audio_callback = make_audio_callback(self.midi_ctrl)
+        audio_callback = make_audio_callback(self.oscillator)
         stream = sd.OutputStream(
             callback=audio_callback,
             samplerate=self.sampling_rate,
             blocksize=self.bs,
             channels=1,
             dtype="float32",
+            latency="low",
         )
         stream.start()
         while True:

@@ -1,9 +1,11 @@
 from pynput import keyboard
 from mido import Message
+from midi_control import MidiControl
+import time
 
 
 class Keys:
-    def __init__(self, midi_ctrl):
+    def __init__(self, midi_ctrl: MidiControl):
         self.key_map = {
             "s": 60,
             "e": 61,
@@ -22,6 +24,8 @@ class Keys:
         self.pressed = set()
         self.channel = 0
         self.midi_ctrl = midi_ctrl
+        # self.pressed_count = 0
+        # self.release_count = 0
 
     def shift_octave(self, shift_dir: str):
         if shift_dir == "q" and self.octave < 4:
@@ -42,7 +46,8 @@ class Keys:
     def on_press(self, key: keyboard.Key):
         try:
             if key.char in self.key_map and key.char not in self.pressed:
-                print(f"Pressed {self.key_map[key.char]} ")
+                # self.pressed_count = self.pressed_count + 1
+                # print(f"Pressed {self.key_map[key.char]}  {self.pressed_count}")
                 self.pressed.add(key.char)
                 self.send_midi_message("note_on", self.key_map[key.char])
             elif key.char in ["q", "w"]:
@@ -57,7 +62,9 @@ class Keys:
     def on_release(self, key: keyboard.Key):
         try:
             if key.char in self.key_map:
-                print(f"Released {self.key_map[key.char]} ")
+                # self.release_count = self.release_count + 1
+                time.sleep(0.1)  # to avoid release before attack
+                # print(f"Released {self.key_map[key.char]} {self.release_count}")
                 self.pressed.remove(key.char)
                 self.send_midi_message("note_off", self.key_map[key.char])
         except AttributeError as e:
@@ -69,6 +76,6 @@ class Keys:
         ) as listener:
             listener.join()
 
-    def send_midi_message(self, operation, note_name):
+    def send_midi_message(self, operation: str, note_name: int):
         msg = Message(operation, channel=self.channel, note=note_name)
         self.midi_ctrl.handling_message(msg)
