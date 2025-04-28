@@ -2,7 +2,7 @@ from virtual_keyboard import Keys
 from midi_control import MidiControl
 from adsr import ADSREnvelope
 from oscillator import Oscillator
-from utils import note_to_frequency, make_audio_callback, compute_buffer
+from utils import make_audio_callback, compute_buffer
 import threading
 import numpy as np
 import sounddevice as sd

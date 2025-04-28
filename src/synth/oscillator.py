@@ -1,6 +1,4 @@
 import numpy as np
-import time
-from adsr import ADSREnvelope
 from numba import njit
 from utils import compute_buffer
 
@@ -28,21 +26,15 @@ class Oscillator:
                 0,
             )  # phase and phase increase,sample done, last intensity
         else:
-            print(f"Note {note} is already on!!")
-            curr_amp = self.last_amp[note]
-            print(f"Restarting attack from {curr_amp}")
             self.current_notes[note] = (freq, 0.0, inc, 0)
             if note in self.note_off_queue:
-                print(f"Removing {note} from off_queue so it will keep playing")
                 self.note_off_queue.remove(note)
 
     def note_off(self, note):
-        print(f"trying to off {note}, queue right now is {self.note_off_queue}")
         if note not in self.note_off_queue:
             self.note_off_queue.append(note)
         else:
-            print(f"note {note} is already in off queue")
-        pass
+            pass
 
     def make_wave_table(self):
         if self.type == "sine":
@@ -64,7 +56,6 @@ class Oscillator:
         return buf, new_phase
 
     def mix_waves(self):
-        # print(f"self.current_notes are {self.current_notes}")
         out_arr = np.zeros(self.buffer_size)
         if len(self.current_notes) > 0:
             keys = list(self.current_notes.keys())
@@ -86,7 +77,6 @@ class Oscillator:
                 out_arr += buf * amp
             out_arr = out_arr / len(self.current_notes)
         if len(self.note_off_queue) > 0:
-            print(f"In mix wave, queue right now is {self.note_off_queue}")
             if self.note_off_queue[0] in self.current_notes:
                 del self.current_notes[self.note_off_queue[0]]
             self.note_off_queue.pop(0)

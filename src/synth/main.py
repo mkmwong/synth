@@ -1,11 +1,4 @@
-import mido
-from midi_control import MidiControl
-from virtual_keyboard import Keys
-
-# from generate_waveform import generate_waveform
 from synth import Synth
-import sounddevice as sd
-from utils import make_audio_callback
 
 if __name__ == "__main__":
     t_att = 2

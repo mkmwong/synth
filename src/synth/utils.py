@@ -32,19 +32,3 @@ def make_audio_callback(osc):
             print(f"time take to callback is {endtime - starttime}")
 
     return audio_callback
-
-
-"""
-def make_audio_callback(midi_ctrl: MidiControl):
-    def audio_callback(outdata: np.ndarray, frames: int, t: int, status: str):
-        mix = np.zeros((frames, 1), dtype=np.float32)
-        for note, gen in list(midi_ctrl.on_notes.items()):
-            try:
-                wave_chunk, _ = next(gen)
-                mix += (wave_chunk.reshape(-1, 1)) *0.1
-            except StopIteration:
-                pass
-        outdata[:] = mix
-
-    return audio_callback
-"""
