@@ -1,0 +1,3 @@
+src/synth/audio.csv
+src/synth/__pycache__/
+tests/__pycache__/
