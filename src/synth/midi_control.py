@@ -1,7 +1,6 @@
 from mido import Message
-from utils import note_to_frequency
-import numpy as np
 import logging
+
 
 class MidiControl:
     def __init__(self, oscillator, bs: int, k: int, on_notes: dict):
@@ -11,8 +10,7 @@ class MidiControl:
 
     def note_on(self, msg: Message) -> bool:
         try:
-            freq = note_to_frequency(msg.note)
-            self.oscillator.note_on(msg.note, freq)
+            self.oscillator.note_on(msg.note)
             return True
         except Exception as e:
             logging.exception(f"Exception encountered in note_on : {e}")

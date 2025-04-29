@@ -1,10 +1,10 @@
 from synth import Synth
 
 if __name__ == "__main__":
-    t_att = 2
+    t_att = 0.1
     t_dec = 0.1
     sus_lvl = 0.7
-    t_rel = 0.5
+    t_rel = 0.1
     curve = "expo"
     bs = 4096
     sr = 48000

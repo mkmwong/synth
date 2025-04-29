@@ -1,6 +1,6 @@
 import numpy as np
-from numba import njit
-from utils import compute_buffer
+from utils import compute_buffer, note_to_frequency
+from note import Note
 
 
 class Oscillator:
@@ -10,31 +10,28 @@ class Oscillator:
         self.sampling_rate = sampling_rate
         self.wave_table = self.make_wave_table()
         self.buffer_size = bs
-        self.current_notes = {}
-        self.note_off_queue = []
-        self.last_amp = {}
+        self.all_notes = {}
         self.adsr = adsr
+        for note in range(1, 129):
+            freq = note_to_frequency(note)
+            step_size = self.table_size * freq / self.sampling_rate
+            self.all_notes[note] = Note(freq, step_size, self.adsr)
         self.arange_buffer = np.arange(self.buffer_size)
+        self.rel_samples = self.adsr.release_time * self.sampling_rate
 
-    def note_on(self, note, freq):
-        inc = self.table_size * freq / self.sampling_rate
-        if note not in self.current_notes:
-            self.current_notes[note] = (
-                freq,
-                0.0,
-                inc,
-                0,
-            )  # phase and phase increase,sample done, last intensity
-        else:
-            self.current_notes[note] = (freq, 0.0, inc, 0)
-            if note in self.note_off_queue:
-                self.note_off_queue.remove(note)
+    def note_on(self, notename):
+        note = self.all_notes[notename]
+        note.start_attack()
 
-    def note_off(self, note):
-        if note not in self.note_off_queue:
-            self.note_off_queue.append(note)
-        else:
-            pass
+    def note_off(self, notename):
+        note = self.all_notes[notename]
+        note.start_release()
+
+    def get_active_notes(self):
+        active_notes = [
+            key for key, val in self.all_notes.items() if val.state != "idle"
+        ]
+        return active_notes
 
     def make_wave_table(self):
         if self.type == "sine":
@@ -44,7 +41,8 @@ class Oscillator:
             return tab
 
     def get_buffer(self, note):
-        freq, phase, inc, sample_done = self.current_notes[note]
+        phase = note.phase
+        inc = note.step_size
         buf, new_phase = compute_buffer(
             phase,
             inc,
@@ -57,28 +55,16 @@ class Oscillator:
 
     def mix_waves(self):
         out_arr = np.zeros(self.buffer_size)
-        if len(self.current_notes) > 0:
-            keys = list(self.current_notes.keys())
-            for note in keys:
-                freq, phase, inc, sample_done = self.current_notes[note]
+        keys = self.get_active_notes()
+        if len(keys) > 0:
+            print(f"active notes are {keys}")
+            for notename in keys:
+                note = self.all_notes[notename]
                 buf, new_phase = self.get_buffer(note)
-                if note in self.last_amp:
-                    lst_amp = self.last_amp[note]
-                else:
-                    lst_amp = 0
-                amp = self.adsr.get_amplitude(sample_done, lst_amp)
-                self.current_notes[note] = (
-                    freq,
-                    new_phase,
-                    inc,
-                    sample_done + self.buffer_size,
-                )
-                self.last_amp[note] = amp[-1]
+                amp = self.adsr.get_amplitude(
+                    note
+                )  # sample_done, note.last_amplitude, notename)
+                note.phase = new_phase
                 out_arr += buf * amp
-            out_arr = out_arr / len(self.current_notes)
-        if len(self.note_off_queue) > 0:
-            if self.note_off_queue[0] in self.current_notes:
-                del self.current_notes[self.note_off_queue[0]]
-            self.note_off_queue.pop(0)
-
+            out_arr = out_arr / len(keys)
         return out_arr

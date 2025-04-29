@@ -3,6 +3,7 @@ from midi_control import MidiControl
 from adsr import ADSREnvelope
 from oscillator import Oscillator
 from utils import make_audio_callback, compute_buffer
+from adsr import make_attack_table_jit, make_release_table_jit
 import threading
 import numpy as np
 import sounddevice as sd
@@ -19,9 +20,12 @@ class Synth:
         self.keyboard = Keys(self.midi_ctrl)
 
     def switch_on(self):
+        # dummy calls to jit functions
         a, b = compute_buffer(
             0.0, 1.0, np.arange(self.bs), 10, np.zeros(self.bs, dtype=np.float32), 0
         )
+        make_attack_table_jit("expo", 0.0, self.sampling_rate, 0.5, 0.5, 0.5, 5)
+        make_release_table_jit("expo", 0.0, self.sampling_rate, 0.5)
         print(f"ready! {a}, {b}")
         device_info = sd.query_devices(kind="output")
         print("Default sample rate:", device_info["default_samplerate"])
