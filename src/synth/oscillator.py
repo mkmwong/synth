@@ -1,10 +1,14 @@
+from __future__ import annotations
 import numpy as np
 from utils import compute_buffer, note_to_frequency
 from note import Note
+from typing import Tuple
 
 
 class Oscillator:
-    def __init__(self, type, tb_size, bs, sampling_rate, adsr):
+    def __init__(
+        self, type: str, tb_size: int, bs: int, sampling_rate: int, adsr: "ADSREnvelope"
+    ):
         self.type = type
         self.table_size = tb_size
         self.sampling_rate = sampling_rate
@@ -19,28 +23,28 @@ class Oscillator:
         self.arange_buffer = np.arange(self.buffer_size)
         self.rel_samples = self.adsr.release_time * self.sampling_rate
 
-    def note_on(self, notename):
+    def note_on(self, notename: str) -> None:
         note = self.all_notes[notename]
         note.start_attack()
 
-    def note_off(self, notename):
+    def note_off(self, notename: str) -> None:
         note = self.all_notes[notename]
         note.start_release()
 
-    def get_active_notes(self):
+    def get_active_notes(self) -> list:
         active_notes = [
             key for key, val in self.all_notes.items() if val.state != "idle"
         ]
         return active_notes
 
-    def make_wave_table(self):
+    def make_wave_table(self) -> np.ndarray:
         if self.type == "sine":
             tab = np.sin(
                 2 * np.pi * np.arange(self.table_size) / self.table_size
             ).astype(np.float32)
             return tab
 
-    def get_buffer(self, note):
+    def get_buffer(self, note) -> Tuple[np.ndarray, str]:
         phase = note.phase
         inc = note.step_size
         buf, new_phase = compute_buffer(
@@ -53,7 +57,7 @@ class Oscillator:
         )
         return buf, new_phase
 
-    def mix_waves(self):
+    def mix_waves(self) -> np.ndarray:
         out_arr = np.zeros(self.buffer_size)
         keys = self.get_active_notes()
         if len(keys) > 0:

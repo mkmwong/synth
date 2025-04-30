@@ -1,8 +1,13 @@
+from __future__ import annotations
 import numpy as np
+from adsr import ADSREnvelope
 
 
 class Note:
-    def __init__(self, freq, step_size, adsr):
+    def __init__(self, freq: float, step_size: int, adsr: ADSREnvelope):
+        # TODO should throw exception if freq is not float
+        # TODO should throw exception if step_size is not int
+        # Todo should throw exception if adsr is not an envelope
         self.freq = freq
         self.phase = 0.0
         self.step_size = step_size
@@ -14,7 +19,7 @@ class Note:
         self.attack_table = np.empty(0)
         self.release_table = np.empty(0)
 
-    def __str__(self):
+    def __str__(self) -> str:
         def preview(arr, max_len=10):
             if arr.size == 0:
                 return "[]"
@@ -37,30 +42,25 @@ class Note:
             f"  release_table: {preview(self.release_table)}"
         )
 
-    def start_attack(self):
+    def start_attack(self) -> None:
         self.state = "attack"
         self.sample_passed = 0
-        self.make_attack_table(self.last_amplitude)
+        self.attack_table = self.make_attack_table(self.last_amplitude)
 
-    def start_decay(self):
-        self.state = "decay"
-
-    def start_sustain(self):
-        self.state = "sustain"
-
-    def start_release(self):
+    def start_release(self) -> None:
         self.state = "release"
-        self.make_release_table(self.last_amplitude)
+        self.release_sample = 0
+        self.release_table = self.make_release_table(self.last_amplitude)
 
-    def reset_notes(self):
+    def reset_notes(self) -> None:
         self.phase = 0.0
         self.sample_passed = 0
         self.state = "idle"
         self.release_amplitude = 0
         self.release_sample = 0
 
-    def make_attack_table(self, starting_amp):
-        self.attack_table = self.adsr.make_attack_table(starting_amp)
+    def make_attack_table(self, starting_amp) -> np.ndarray:
+        return self.adsr.make_attack_table(starting_amp)
 
-    def make_release_table(self, starting_amp):
-        self.release_table = self.adsr.make_release_table(starting_amp)
+    def make_release_table(self, starting_amp) -> np.ndarray:
+        return self.adsr.make_release_table(starting_amp)

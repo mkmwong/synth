@@ -1,3 +1,4 @@
+from __future__ import annotations
 from virtual_keyboard import Keys
 from midi_control import MidiControl
 from adsr import ADSREnvelope
@@ -10,7 +11,19 @@ import sounddevice as sd
 
 
 class Synth:
-    def __init__(self, t_att, t_dec, sus_lvl, t_rel, curve, bs, sr, type, k, tb_size):
+    def __init__(
+        self,
+        t_att: float,
+        t_dec: float,
+        sus_lvl: float,
+        t_rel: float,
+        curve: str,
+        bs: int,
+        sr: int,
+        type: str,
+        k: int,
+        tb_size: int,
+    ):
         self.adsr = ADSREnvelope(t_att, t_dec, sus_lvl, t_rel, curve, bs, sr, k)
         self.sampling_rate = sr
         self.bs = bs
@@ -19,7 +32,7 @@ class Synth:
         self.midi_ctrl = MidiControl(self.oscillator, self.bs, k, self.on_notes)
         self.keyboard = Keys(self.midi_ctrl)
 
-    def switch_on(self):
+    def switch_on(self) -> None:
         # dummy calls to jit functions
         a, b = compute_buffer(
             0.0, 1.0, np.arange(self.bs), 10, np.zeros(self.bs, dtype=np.float32), 0
@@ -27,8 +40,8 @@ class Synth:
         make_attack_table_jit("expo", 0.0, self.sampling_rate, 0.5, 0.5, 0.5, 5)
         make_release_table_jit("expo", 0.0, self.sampling_rate, 0.5)
         print(f"ready! {a}, {b}")
-        device_info = sd.query_devices(kind="output")
-        print("Default sample rate:", device_info["default_samplerate"])
+        # device_info = sd.query_devices(kind="output")
+        # print("Default sample rate:", device_info["default_samplerate"])
         keyboard_thread = threading.Thread(
             target=self.keyboard.start_keyboard, daemon=True
         )

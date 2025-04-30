@@ -1,3 +1,4 @@
+from __future__ import annotations
 from mido import Message
 import logging
 

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from pynput import keyboard
 from mido import Message
 from midi_control import MidiControl
@@ -25,7 +26,7 @@ class Keys:
         self.channel = 0
         self.midi_ctrl = midi_ctrl
 
-    def shift_octave(self, shift_dir: str):
+    def shift_octave(self, shift_dir: str) -> None:
         if shift_dir == "q" and self.octave < 4:
             print(f"Shifting up to { 4 + self.octave + 1 }")
             self.key_map = {
@@ -41,7 +42,7 @@ class Keys:
         else:
             print(f"Reach range limit, cannot perform shift.")
 
-    def on_press(self, key: keyboard.Key):
+    def on_press(self, key: keyboard.Key) -> None:
         try:
             if key.char in self.key_map and key.char not in self.pressed:
                 self.pressed.add(key.char)
@@ -55,7 +56,7 @@ class Keys:
         except AttributeError as e:
             print(f"Error: {e}")
 
-    def on_release(self, key: keyboard.Key):
+    def on_release(self, key: keyboard.Key) -> None:
         try:
             if key.char in self.key_map:
                 time.sleep(0.1)  # to avoid release before attack
@@ -64,12 +65,12 @@ class Keys:
         except AttributeError as e:
             print(f"Error: {e}")
 
-    def start_keyboard(self):
+    def start_keyboard(self) -> None:
         with keyboard.Listener(
             on_press=self.on_press, on_release=self.on_release
         ) as listener:
             listener.join()
 
-    def send_midi_message(self, operation: str, note_name: int):
+    def send_midi_message(self, operation: str, note_name: int) -> None:
         msg = Message(operation, channel=self.channel, note=note_name)
         self.midi_ctrl.handling_message(msg)

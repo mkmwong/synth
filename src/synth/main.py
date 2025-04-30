@@ -1,3 +1,4 @@
+from __future__ import annotations
 from synth import Synth
 
 if __name__ == "__main__":

@@ -1,12 +1,21 @@
+from __future__ import annotations
 import numpy as np
 import time
 from numba import njit
+from typing import Callable
+from sounddevice import CallbackFlags
 
 
 @njit
 def make_attack_table_jit(
-    curve, starting_amplitude, sampling_rate, attack_time, sustain_level, decay_time, k
-):
+    curve: str,
+    starting_amplitude: float,
+    sampling_rate: int,
+    attack_time: float,
+    sustain_level: float,
+    decay_time: float,
+    k: int,
+) -> np.ndarray:
     if curve == "expo":
         attack = starting_amplitude + (1 - starting_amplitude) * (
             1
@@ -25,8 +34,12 @@ def make_attack_table_jit(
 
 @njit
 def make_release_table_jit(
-    curve, starting_amplitude, num_sample, sampling_rate, release_time
-):
+    curve: str,
+    starting_amplitude: float,
+    num_sample: int,
+    sampling_rate: int,
+    release_time: float,
+) -> np.ndarray:
     if curve == "expo":
         t = np.arange(num_sample) / sampling_rate
         rel_table = starting_amplitude * np.exp(-t / (release_time / -np.log(0.001)))
@@ -34,20 +47,14 @@ def make_release_table_jit(
 
 
 @njit
-def get_expo_release_table(off_queue, rel_time, sample_rate, buffer_size):
-    time_passed = off_queue[1]
-    amp = off_queue[0]
-    num_sample = int(rel_time * sample_rate)
-    t = np.arange(num_sample) / sample_rate
-    rel_table = amp * np.exp(-t / (rel_time / -np.log(0.001)))
-    end_point = min(time_passed + buffer_size, len(rel_table))
-    ret_arr = np.zeros(buffer_size)
-    ret_arr[0 : end_point - time_passed] = rel_table[time_passed:end_point]
-    return ret_arr, time_passed + buffer_size
-
-
-@njit
-def compute_buffer(phase, inc, arange_buffer, table_size, wave_table, buffer_size):
+def compute_buffer(
+    phase: float,
+    inc: int,
+    arange_buffer: np.ndarray,
+    table_size: int,
+    wave_table: np.ndarray,
+    buffer_size: int,
+):
     idxs = (phase + inc * arange_buffer) % table_size
     idxs = idxs.astype(np.int32)
     buf = np.take(wave_table, idxs)
@@ -59,14 +66,16 @@ def note_to_frequency(midi_note: int) -> float:
     return 440.0 * (2 ** ((midi_note - 69) / 12))
 
 
-def save_to_csv(mix_buffer, filename="audio_data.csv"):
+def save_to_csv(mix_buffer: np.ndarray, filename="audio_data.csv") -> None:
     # Open the file in append mode
     with open(filename, mode="a") as f:
         np.savetxt(f, mix_buffer, delimiter=",", fmt="%.6f")  # Save the amplitudes only
 
 
-def make_audio_callback(osc):
-    def audio_callback(outdata, frame, t, status):
+def make_audio_callback(osc: "Oscillator") -> Callable:
+    def audio_callback(
+        outdata: np.ndarray, frame: int, t: float, status: CallbackFlags
+    ):
         try:
             # starttime = time.time()
             aud = osc.mix_waves()

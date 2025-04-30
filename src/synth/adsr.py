@@ -1,11 +1,18 @@
+from __future__ import annotations
 import numpy as np
 from numba import njit
 
 
 @njit
 def make_attack_table_jit(
-    curve, starting_amplitude, sampling_rate, attack_time, sustain_level, decay_time, k
-):
+    curve: str,
+    starting_amplitude: float,
+    sampling_rate: int,
+    attack_time: float,
+    sustain_level: float,
+    decay_time: float,
+    k: int,
+) -> np.ndarray:
     if curve == "expo":
         attack = starting_amplitude + (1 - starting_amplitude) * (
             1
@@ -25,7 +32,9 @@ def make_attack_table_jit(
 
 
 @njit
-def make_release_table_jit(curve, starting_amplitude, sampling_rate, release_time):
+def make_release_table_jit(
+    curve: str, starting_amplitude: float, sampling_rate: int, release_time: float
+) -> np.ndarray:
     num_sample = int(release_time * sampling_rate)
     if curve == "expo":
         t = np.arange(num_sample) / sampling_rate
@@ -57,7 +66,7 @@ class ADSREnvelope:
         self.time_chunk = self.buffer_size / self.sampling_rate
         self.k = k
 
-    def make_attack_table(self, starting_amplitude):
+    def make_attack_table(self, starting_amplitude: float) -> np.ndarray:
         tab = make_attack_table_jit(
             self.curve,
             starting_amplitude,
@@ -69,13 +78,13 @@ class ADSREnvelope:
         )
         return tab
 
-    def make_release_table(self, starting_amplitude):
+    def make_release_table(self, starting_amplitude: float) -> np.ndarray:
         tab = make_release_table_jit(
             self.curve, starting_amplitude, self.sampling_rate, self.release_time
         )
         return tab
 
-    def get_amplitude(self, note):
+    def get_amplitude(self, note: "Note") -> np.ndarray:
         attack_table = note.attack_table
         release_table = note.release_table
         amp_arr = np.full(self.buffer_size, self.sustain_level)
